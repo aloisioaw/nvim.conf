@@ -81,8 +81,22 @@ return {
       ensure_installed = {
         -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
+        'debugpy',
       },
     }
+
+    -- Python specific conf - add src/ folder to path
+    dap.configurations.python = dap.configurations.python or {}
+    vim.list_extend(dap.configurations.python, {
+      type = 'python',
+      request = 'launch',
+      name = 'Launch file with src/',
+      program = '${file}',
+      env = {
+        PYTHONPATH = '${workspaceFolder}:${workspaceFolder}/src',
+      },
+      pythonPath = function() return 'python' end,
+    })
 
     -- Dap UI setup
     -- For more information, see |:help nvim-dap-ui|
