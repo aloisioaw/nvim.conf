@@ -85,17 +85,67 @@ return {
       },
     }
 
-    -- Python specific conf - add src/ folder to path
-    dap.configurations.python = dap.configurations.python or {}
-    vim.list_extend(dap.configurations.python, {
+    -- 1. Get the existing configurations for python
+    -- (This ensures we don't overwrite what Mason-DAP already created)
+    local configurations = dap.configurations.python or {}
+
+    -- 2. Define a function to update the PYTHONPATH
+    local function add_src_to_path(configs)
+      for _, config in ipairs(configs) do
+        -- Initialize env if it doesn't exist
+        config.env = config.env or {}
+
+        -- We use ${workspaceFolder} because nvim-dap resolves this
+        -- to the root directory of your project automatically.
+        config.env.PYTHONPATH = '${workspaceFolder}:${workspaceFolder}/src'
+      end
+    end
+
+    -- 3. Apply the fix to current and future configurations
+    add_src_to_path(configurations)
+    dap.configurations.python = configurations
+
+    pythonPath_func =
+      function()
+        -- 1. Check if we are in a 'uv' project
+        local venv_path = os.getenv 'VIRTUAL_ENV' or io.popen('uv venv --show'):read '*l'
+
+        if venv_path and venv_path ~= '' then
+          -- Return the path to the python executable inside the uv venv
+          return venv_path .. '/bin/python'
+        end
+
+        -- 2. Fallback to system python if uv isn't initialized
+        return '/usr/bin/python3'
+      end, table.insert(dap.configurations.python, {
+        type = 'python',
+        request = 'launch',
+        name = 'Pytest: Current File',
+        module = 'pytest', -- This is the magic line
+        args = {
+          '${file}',
+          '-sv', -- -s shows print output, -v is verbose
+        },
+        console = 'integratedTerminal',
+        env = {
+          -- Re-applying your src path fix here as well!
+          PYTHONPATH = '${workspaceFolder}:${workspaceFolder}/src',
+        },
+      })
+
+    table.insert(dap.configurations.python, {
       type = 'python',
       request = 'launch',
-      name = 'Launch file with src/',
-      program = '${file}',
-      env = {
-        PYTHONPATH = '${workspaceFolder}:${workspaceFolder}/src',
-      },
-      pythonPath = function() return 'python' end,
+      name = 'uv: Pytest Current File',
+      -- We use 'uv' to launch the module
+      module = 'pytest',
+      -- uv handles the environment, so we just pass the file
+      args = { '${file}', '-sv' },
+      -- This tells nvim-dap to use the 'uv' execution context
+      pythonPath = pythonPath_func,
+      -- uv is smart enough to find the src folder if it's in your pyproject.toml,
+      -- but we keep this here as a safety net:
+      env = { PYTHONPATH = '${workspaceFolder}/src' },
     })
 
     -- Dap UI setup
