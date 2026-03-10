@@ -623,6 +623,7 @@ require('lazy').setup({
         'ruff',
         'black',
         -- You can add other tools here that you want Mason to install
+        'markdownlint',
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
