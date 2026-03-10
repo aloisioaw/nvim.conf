@@ -29,8 +29,8 @@ return {
 
       vim.keymap.set('n', '<C-e>', function() toggle_telescope(harpoon:list()) end, { desc = 'Open harpoon window' })
 
-      vim.keymap.set('n', '<leader>a', function() harpoon:list():add() end, { desc = 'Harpoon: Mark file' })
-      vim.keymap.set('n', '<leader>A', function() harpoon:list():remove() end, { desc = 'Harpoon: Unmark file' })
+      vim.keymap.set('n', '<leader>ha', function() harpoon:list():add() end, { desc = 'Harpoon: Mark file' })
+      vim.keymap.set('n', '<leader>hr', function() harpoon:list():remove() end, { desc = 'Harpoon: Unmark file' })
 
       vim.keymap.set('n', '<C-h>', function() harpoon:list():select(1) end)
       vim.keymap.set('n', '<C-t>', function() harpoon:list():select(2) end)
